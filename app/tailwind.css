@@ -9,4 +9,14 @@ body {
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
+
+}
+
+.user-draggable {
+  user-select: none;
+  /* Evita selección de texto */
+  -webkit-user-drag: none;
+  /* Para navegadores WebKit */
+  -webkit-touch-callout: none;
+  /* Para iOS */
 }
