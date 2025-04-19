@@ -26,7 +26,7 @@ export default function GameRoute() {
     return (
         <div className='flex flex-col justify-center items-center w-[100svw] h-[100svh] mx-[auto] overflow-hidden'>
             <h1 className='my-8 text-3xl font-bold select-none'>Dot Dash - Nivel {levelData.id}</h1>
-            <GameBoard {...levelData} />
+            <GameBoard level={{ ...levelData }} />
             <motion.button className='right-4 bg-["#3f3f3f"] text-white px-4 
             py-2 rounded-md shadow-md my-8'
                 whileHover={{ backgroundColor: '#4f4f4f' }}

@@ -13,20 +13,9 @@ export type Level = {
     dots: Dot[];
 };
 
-export type ActivePath = {
-    color: string;
-    fromDotId: number;
-    positions: Position[];
-};
-
-export type GameState = {
-    paths: ActivePath[];
-    currentPath: ActivePath | null;
-};
-
 export type GridCell = {
-    x: number;
-    y: number;
+    x: number,
+    y: number,
     hasDot: boolean;
     dotId?: number;
     color?: string;
@@ -34,10 +23,42 @@ export type GridCell = {
     isHovered?: boolean;
 };
 
-/*
+export type ActivePath = GridCell[];
+
+export type UnActivePath = {
+    path: ActivePath;
+    isCompleted: boolean;
+};
+
+export type UnActivePaths = UnActivePath[];
+
+export type GameState = {
+    originalGridCells: GridCell[][];
+    gridCells: GridCell[][];
+    activePath: ActivePath | null;
+    unActivePaths: UnActivePaths;
+};
+
+
+
 export type GameAction =
-    | { type: 'START_PATH'; payload: { dotId: number; color: string; position: Position } }
-    | { type: 'ADD_POSITION'; payload: { position: Position } }
-    | { type: 'END_PATH'; payload: { toDotId: number } }
-    | { type: 'RESET' };
-*/
+    | {
+        type: 'START_NEW_PATH';
+        payload: { gridCell: GridCell };
+    }
+    | {
+        type: 'ADD_CELL_TO_PATH';
+        payload: { gridCell: GridCell };
+    }
+    | {
+        type: 'REMOVE_LAST_CELL_FROM_PATH';
+    }
+    | {
+        type: 'COMPLETE_PATH';
+    }
+    | {
+        type: 'RESET_ACTIVE_PATH';
+    }
+    | {
+        type: 'RESET';
+    };

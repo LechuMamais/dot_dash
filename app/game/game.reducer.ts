@@ -1,43 +1,64 @@
-import { GameState, GameAction } from './game.types';
+import { GameActions } from './game.actions';
+import { GameAction, GameState } from './game.types';
+
+export const initialState: GameState = {
+    originalGridCells: [[]],
+    gridCells: [[]],
+    activePath: null,
+    unActivePaths: []
+};
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
     switch (action.type) {
-        case 'START_PATH':
+        case GameActions.START_NEW_PATH: {
             return {
                 ...state,
-                currentPath: {
-                    fromDotId: action.payload.dotId,
-                    color: action.payload.color,
-                    positions: [action.payload.position],
-                },
+                activePath: [action.payload.gridCell],
             };
+        }
 
-        case 'ADD_POSITION':
-            if (!state.currentPath) return state;
+        case GameActions.ADD_CELL_TO_PATH: {
+            if (!state.activePath) return state;
             return {
                 ...state,
-                currentPath: {
-                    ...state.currentPath,
-                    positions: [...state.currentPath.positions, action.payload.position],
-                },
+                activePath: [...state.activePath, action.payload.gridCell],
             };
+        }
 
-        case 'END_PATH':
-            if (!state.currentPath) return state;
-
-            // Check if it's a valid end (could extend this logic more later)
-            if (action.payload.toDotId === state.currentPath.fromDotId) return state;
-
+        case GameActions.REMOVE_LAST_CELL_FROM_PATH: {
+            if (!state.activePath || state.activePath.length === 0) return state;
             return {
-                paths: [...state.paths, state.currentPath],
-                currentPath: null,
+                ...state,
+                activePath: state.activePath.slice(0, -1),
             };
+        }
 
-        case 'RESET':
+        case GameActions.COMPLETE_PATH: {
+            if (!state.activePath || state.activePath.length <= 1) return state;
             return {
-                paths: [],
-                currentPath: null,
+                ...state,
+                activePath: null,
+                unActivePaths: [
+                    ...state.unActivePaths,
+                    {
+                        path: [...state.activePath],
+                        isCompleted: true,
+                    }
+                ]
             };
+        }
+
+        case GameActions.RESET_ACTIVE_PATH:
+            return { ...state, activePath: [] };
+
+        case GameActions.RESET: {
+            return {
+                ...state,
+                gridCells: state.originalGridCells,
+                activePath: null,
+                unActivePaths: []
+            };
+        }
 
         default:
             return state;
