@@ -23,20 +23,17 @@ export type GridCell = {
     isHovered?: boolean;
 };
 
-export type ActivePath = GridCell[];
+//export type ActivePath = GridCell[];
 
-export type UnActivePath = {
-    path: ActivePath;
-    isCompleted: boolean;
-};
-
-export type UnActivePaths = UnActivePath[];
+export type Path = GridCell[];
+export type Paths = Path[];
 
 export type GameState = {
     originalGridCells: GridCell[][];
     gridCells: GridCell[][];
-    activePath: ActivePath | null;
-    unActivePaths: UnActivePaths;
+    activePath: Path | null;
+    unActivePaths: Paths | null;
+    completedPaths: Paths | null;
 };
 
 
@@ -55,6 +52,17 @@ export type GameAction =
     }
     | {
         type: 'COMPLETE_PATH';
+    }
+    | {
+        type: 'DEACTIVATE_PATH';
+    }
+    | {
+        type: 'SET_ACTIVE_PATH';
+        payload: { gridCell: GridCell };
+    }
+    | {
+        type: 'JOIN_PATH';
+        payload: { gridCell: GridCell, endPathToJoin: Path };
     }
     | {
         type: 'RESET_ACTIVE_PATH';

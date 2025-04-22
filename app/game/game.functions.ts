@@ -1,4 +1,4 @@
-import { GridCell, Level, UnActivePaths } from "./game.types";
+import { GridCell, Level, Paths } from "./game.types";
 
 export const cellHasDot = (cell: GridCell) => {
     return cell.hasDot && cell.dotId !== undefined && cell.color !== undefined
@@ -19,12 +19,9 @@ export const checkPathCompletion = (firstCell: GridCell, newCell: GridCell) => {
     return (firstCell.color === newCell.color && firstCell.hasDot && newCell.hasDot && firstCell.dotId !== newCell.dotId)
 }
 
-export const checkLevelCompletion = (unActivePaths: UnActivePaths, level: Level) => {
-    let completedPaths: number = 0;
-    unActivePaths.map(path => {
-        if (path.isCompleted) { completedPaths++ }
-    })
-    return completedPaths === (level.dots.length) / 2
+export const checkLevelCompletion = (completedPaths: Paths, level: Level) => {
+    if (!completedPaths) return false
+    return (level.dots.length) / 2 === completedPaths?.length
 }
 
 export const haveSamePosition = (cell1: GridCell, cell2: GridCell) => {

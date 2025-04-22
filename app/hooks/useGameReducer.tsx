@@ -1,7 +1,7 @@
 import { useReducer } from 'react';
 import { GameActions } from '~/game/game.actions';
 import { gameReducer } from '~/game/game.reducer';
-import { GameState, GridCell, Level } from '~/game/game.types';
+import { GameState, GridCell, Level, Path } from '~/game/game.types';
 import { createInitialGrid } from '~/utils/createInitialGrid';
 
 const getInitialState = (level: Level): GameState => {
@@ -11,6 +11,7 @@ const getInitialState = (level: Level): GameState => {
         gridCells: grid,
         activePath: null,
         unActivePaths: [],
+        completedPaths: []
     };
 };
 
@@ -35,7 +36,19 @@ export const useGameReducer = (level: Level) => {
     const completePath = () =>
         dispatch({ type: GameActions.COMPLETE_PATH });
 
-    const resetActivePath = () => dispatch({ type: "RESET_ACTIVE_PATH" });
+    const deActivatePath = () => {
+        dispatch({ type: GameActions.DEACTIVATE_PATH });
+    }
+
+    const setActivePath = (cell: GridCell) => {
+        dispatch({ type: GameActions.SET_ACTIVE_PATH, payload: { gridCell: cell } });
+    }
+
+    const joinPath = (cell: GridCell, endPathToJoin: Path) => {
+        dispatch({ type: GameActions.JOIN_PATH, payload: { gridCell: cell, endPathToJoin: endPathToJoin } });
+    }
+
+    const resetActivePath = () => dispatch({ type: GameActions.RESET_ACTIVE_PATH });
 
     const resetGame = () =>
         dispatch({ type: GameActions.RESET });
@@ -46,6 +59,9 @@ export const useGameReducer = (level: Level) => {
         addCellToPath,
         removeLastCellFromPath,
         completePath,
+        deActivatePath,
+        setActivePath,
+        joinPath,
         resetActivePath,
         resetGame,
     };

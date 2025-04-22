@@ -1,10 +1,10 @@
 import { useRef, useEffect } from "react";
-import { GridCell, Level } from "~/game/game.types";
+import { GridCell, Level, Path } from "~/game/game.types";
 import { getCellCenter } from "~/utils/getCellCenter";
 import ActivePath from "./ActivePath";
 import { AnimatePresence } from "framer-motion";
 import { useGameReducer } from "~/hooks/useGameReducer";
-import { areCellsAdjacent, cellHasDot, cellHasLine, checkPathCompletion, haveSamePosition } from "~/game/game.functions";
+import { areCellsAdjacent, cellHasDot, cellHasLine, checkLevelCompletion, checkPathCompletion, haveSamePosition } from "~/game/game.functions";
 
 
 export default function GameBoard({ level }: { level: Level }) {
@@ -19,38 +19,57 @@ export default function GameBoard({ level }: { level: Level }) {
         addCellToPath,
         removeLastCellFromPath,
         completePath,
+        deActivatePath,
+        setActivePath,
+        joinPath,
         resetActivePath,
     } = useGameReducer(level);
 
-    const { gridCells, activePath, unActivePaths } = state;
+    const { gridCells, activePath, unActivePaths, completedPaths } = state;
 
     useEffect(() => {
         const onCellHover = (cell: GridCell) => {
-            const last = activePath?.at(-1);
+            const last = activePath?.at(activePath.length - 1);
             if (!last) return;
             if (activePath?.length === 0 || activePath === null || activePath === undefined) return;
-
             if (!areCellsAdjacent(last, cell)) return;
 
-            if (cellHasLine(cell)) return;
-
-
             const secondLast = activePath?.at(-2);
+
             if (secondLast != undefined && haveSamePosition(cell, secondLast)) {
                 removeLastCellFromPath();
                 return;
             }
+
+
+            // Si tiene línea, se podrá añadir sólo si es el final de otra linea del mismo color
+            if (cellHasLine(cell)) {
+                const isSameColor = cell.color === last.color;
+
+                // Buscar un path que termine exactamente en la celda seleccionada y sea del mismo color
+                const pathToJoin = unActivePaths?.find(path => {
+                    const lastCell = path[path.length - 1];
+                    return lastCell.x === cell.x && lastCell.y === cell.y && lastCell.color === cell.color;
+                });
+
+                if (isSameColor && pathToJoin) {
+                    console.log('Unir líneas');
+                    joinPath(cell, pathToJoin);
+                } else {
+                    return;
+                }
+            }
+
 
             if (cellHasDot(cell)) {
                 const first = activePath[0];
                 if (first && checkPathCompletion(first, cell)) {
                     addCellToPath(cell)
                     completePath();
+
                 }
-                console.log(unActivePaths)
                 return; // No continuar en ningún caso después de un dot
             }
-            //console.log('Adding cell to path:', cell);
             addCellToPath(cell);
         };
 
@@ -89,15 +108,27 @@ export default function GameBoard({ level }: { level: Level }) {
                 startNewPath(cell);
                 isMouseDownRef.current = true;
                 lastHoveredCellRef.current = cell;
+                return
+            }
+            if (cellHasLine(cell)) {
+                setActivePath(cell)
+                isMouseDownRef.current = true;
+                lastHoveredCellRef.current = cell;
+                return
             }
         };
 
         const handleMouseUp = () => {
             if (state.activePath) {
-                resetActivePath();
+                deActivatePath();
             }
             isMouseDownRef.current = false;
             lastHoveredCellRef.current = null;
+
+
+            if (completedPaths && checkLevelCompletion(completedPaths, level)) {
+                console.log('level completed')
+            }
         };
 
         window.addEventListener("mousemove", handleMouseMove);
@@ -111,6 +142,31 @@ export default function GameBoard({ level }: { level: Level }) {
         };
     }, [activePath, gridCells, level.size, startNewPath, resetActivePath, state.activePath]);
 
+
+    const renderPathLines = (
+        paths: Path[] | null,
+        keyPrefix: string
+    ) =>
+        paths?.flatMap((path, pathIdx) =>
+            path.map((from, idx, arr) => {
+                const to = arr[idx + 1];
+                if (!to) return null;
+
+                const fromCenter = getCellCenter(from.x, from.y, boardRef, level.size);
+                const toCenter = getCellCenter(to.x, to.y, boardRef, level.size);
+                if (!fromCenter || !toCenter) return null;
+
+                return (
+                    <ActivePath
+                        key={`${keyPrefix}-${pathIdx}-${idx}`}
+                        from={fromCenter}
+                        to={toCenter}
+                        color={path[0].color ?? ""}
+                        containerRef={boardRef}
+                    />
+                );
+            })
+        );
 
     return (
         <div
@@ -163,33 +219,17 @@ export default function GameBoard({ level }: { level: Level }) {
                                 key={`active-${idx}`}
                                 from={fromCenter}
                                 to={toCenter}
-                                color={activePath[0].color}
+                                color={activePath[0].color ? activePath[0].color : ""}
                                 containerRef={boardRef}
                             />
                         );
                     })}
             </AnimatePresence>
 
-            {unActivePaths.map((path, pathIdx) =>
-                [path].map((from, idx, arr) => {
-                    const to = arr[idx + 1];
-                    if (!to) return null;
+            {renderPathLines(unActivePaths, "unactive")}
+            {renderPathLines(completedPaths, "completed")}
 
-                    const fromCenter = getCellCenter(from.x, from.y, boardRef, level.size);
-                    const toCenter = getCellCenter(to.x, to.y, boardRef, level.size);
-                    if (!fromCenter || !toCenter) return null;
 
-                    return (
-                        <ActivePath
-                            key={`done-${pathIdx}-${idx}`}
-                            from={fromCenter}
-                            to={toCenter}
-                            color={path[0].color}
-                            containerRef={boardRef}
-                        />
-                    );
-                })
-            )}
 
         </div>
     );
